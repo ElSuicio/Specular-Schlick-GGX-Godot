@@ -15,6 +15,12 @@ This is an addon for Godot 4.4+ that adds the `Schlick-GGX` node to the visual s
 
 <br>
 
+<div align="center">
+  
+<img src = "https://raw.githubusercontent.com/ElSuicio/Specular-Schlick-GGX-Godot/refs/heads/main/render/1152x648/SchlickGGX.png" alt = "SchlickGGXRender.">
+
+</div>
+
 <br>
 
 <div align="center"> Schlick-GGX Specular Reflectance Model (Render). </div>
