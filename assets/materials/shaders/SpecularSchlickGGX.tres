@@ -1,0 +1,244 @@
+[gd_resource type="VisualShader" load_steps=16 format=3 uid="uid://bxfi37ikpx20j"]
+
+[ext_resource type="Script" uid="uid://dgckc60lc0wao" path="res://addons/specular_schlick_ggx/SpecularSchlickGGX.gd" id="2_du7ku"]
+[ext_resource type="Script" uid="uid://bpu0lhxrryjmm" path="res://addons/diffuse_burley/DiffuseBurley.gd" id="2_x3xka"]
+
+[sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_shkmf"]
+expanded_output_ports = [0]
+parameter_name = "AlbedoColor"
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_0hmp3"]
+parameter_name = "Roughness"
+hint = 1
+default_value_enabled = true
+default_value = 1.0
+
+[sub_resource type="VisualShaderNodeVectorCompose" id="VisualShaderNodeVectorCompose_ge00o"]
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_du7ku"]
+parameter_name = "Metallic"
+hint = 1
+default_value_enabled = true
+
+[sub_resource type="VisualShaderNodeFloatParameter" id="VisualShaderNodeFloatParameter_x3xka"]
+parameter_name = "Specular"
+hint = 1
+default_value_enabled = true
+default_value = 0.5
+
+[sub_resource type="VisualShaderNodeVaryingSetter" id="VisualShaderNodeVaryingSetter_x3xka"]
+varying_name = "metallic_specular"
+
+[sub_resource type="VisualShaderNodeVectorOp" id="VisualShaderNodeVectorOp_1t1ni"]
+
+[sub_resource type="VisualShaderNodeVectorOp" id="VisualShaderNodeVectorOp_ge00o"]
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_f6plj"]
+input_name = "diffuse"
+
+[sub_resource type="VisualShaderNodeCustom" id="VisualShaderNodeCustom_aptr4"]
+initialized = true
+script = ExtResource("2_x3xka")
+
+[sub_resource type="VisualShaderNodeVaryingGetter" id="VisualShaderNodeVaryingGetter_x3xka"]
+varying_name = "metallic_specular"
+
+[sub_resource type="VisualShaderNodeCustom" id="VisualShaderNodeCustom_x3xka"]
+default_input_values = [0, null, 1, null, 2, null, 3, null, 4, null, 5, null, 6, null, 7, null, 8, 0.5]
+initialized = true
+script = ExtResource("2_du7ku")
+
+[sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_shkmf"]
+input_name = "specular"
+
+[resource]
+code = "shader_type spatial;
+render_mode blend_mix, depth_draw_opaque, cull_back, diffuse_lambert, specular_schlick_ggx;
+
+
+// Varyings
+varying float var_metallic_specular;
+
+uniform vec4 AlbedoColor : source_color = vec4(1.000000, 1.000000, 1.000000, 1.000000);
+uniform float Metallic : hint_range(0.0, 1.0) = 0.0;
+uniform float Roughness : hint_range(0.0, 1.0) = 1.0;
+uniform float Specular : hint_range(0.0, 1.0) = 0.5;
+
+
+
+void fragment() {
+// ColorParameter:2
+	vec4 n_out2p0 = AlbedoColor;
+	float n_out2p1 = n_out2p0.r;
+	float n_out2p2 = n_out2p0.g;
+	float n_out2p3 = n_out2p0.b;
+
+
+// VectorCompose:4
+	vec3 n_out4p0 = vec3(n_out2p1, n_out2p2, n_out2p3);
+
+
+// FloatParameter:6
+	float n_out6p0 = Metallic;
+
+
+// FloatParameter:3
+	float n_out3p0 = Roughness;
+
+
+// FloatParameter:7
+	float n_out7p0 = Specular;
+
+
+// Output:0
+	ALBEDO = n_out4p0;
+	METALLIC = n_out6p0;
+	ROUGHNESS = n_out3p0;
+	SPECULAR = n_out7p0;
+
+
+// VaryingSetter:8
+	var_metallic_specular = n_out7p0;
+
+
+}
+
+void light() {
+// Input:13
+	vec3 n_out13p0 = DIFFUSE_LIGHT;
+
+
+	vec3 n_out19p0;
+// Burley:19
+	{
+		
+			const float INV_PI = 0.318309;
+			
+			vec3 n = normalize( NORMAL );
+			vec3 l = normalize( LIGHT );
+			vec3 v = normalize( VIEW );
+			
+			vec3 h = normalize(v + l); // Halfway Vector.
+			
+			float cNdotL = max(dot(n, l), 0.0); // [0.0, 1.0].
+			float cNdotV = max(dot(n, v), 0.0); // [0.0, 1.0].
+			
+			float cHdotL = max(dot(h, l), 0.0); // [0.0, 1.0].
+			
+			// https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf
+			
+			float FD90 = 2.0 * ROUGHNESS * cHdotL * cHdotL - 0.5;
+			
+			float fd_L = 1.0 + (FD90) * pow(1.0 - cNdotL, 5.0);
+			float fd_V = 1.0 + (FD90) * pow(1.0 - cNdotV, 5.0);
+			
+			float diffuse_burley = fd_V * fd_L * cNdotL;
+			
+			n_out19p0 = LIGHT_COLOR * ATTENUATION * diffuse_burley * INV_PI;
+			
+	}
+
+
+// VectorOp:12
+	vec3 n_out12p0 = n_out13p0 + n_out19p0;
+
+
+// Input:9
+	vec3 n_out9p0 = SPECULAR_LIGHT;
+
+
+// VaryingGetter:25
+	float n_out25p0 = var_metallic_specular;
+
+
+	vec3 n_out26p0;
+// SchlickGGX:26
+	{
+		
+			vec3 n = normalize( NORMAL );
+			vec3 l = normalize( LIGHT );
+			vec3 v = normalize( VIEW );
+			
+			vec3 h = normalize(v + l); // Halfway Vector.
+			
+			float NdotL = dot(n, l); // [-1.0, 1.0].
+			float NdotV = dot(n, v); // [-1.0, 1.0].
+			
+			float HdotN = dot(h, n); // [-1.0, 1.0].
+			float HdotL = dot(h, l); // [-1.0, 1.0].
+			
+			float cNdotL = max(NdotL, 0.0); // [0.0, 1.0].
+			float cNdotV = max(NdotV, 0.0); // [0.0, 1.0].
+			
+			float cHdotN = max(HdotN, 0.0); // [0.0, 1.0].
+			float cHdotL = max(HdotL, 0.0); // [0.0, 1.0].
+			
+			float a = ROUGHNESS * ROUGHNESS; // Variance.
+			float a2 = a * a;
+			
+			/* Normal Distribution Function (GGX) */
+			float D = 1.0 + (a2 - 1.0) * cHdotN * cHdotN;
+			
+			D = a2 / (PI * D * D);
+			
+			/* Geometric Function (GGX) */
+			float G = 0.5 / mix(2.0 * cNdotL * cNdotV, cNdotL + cNdotV, a);
+			
+			/* Fresnel Function (Schlick’s Approximation) */
+			float dielectric = 0.16 * n_out25p0 * n_out25p0;
+			
+			vec3 f0 = mix(vec3( dielectric ), ALBEDO, vec3( METALLIC )); 
+			float f90 = clamp(dot(f0, vec3(16.5)), METALLIC, 1.0);
+			
+			vec3 F = f0 + (f90 - f0) * pow(1.0 - HdotL, 5.0);
+			
+			vec3 specular_schlick_ggx = max(D * G * F * cNdotL, 0.0);
+			
+			n_out26p0 = LIGHT_COLOR * ATTENUATION * specular_schlick_ggx;
+			
+	}
+
+
+// VectorOp:10
+	vec3 n_out10p0 = n_out9p0 + n_out26p0;
+
+
+// Output:0
+	DIFFUSE_LIGHT = n_out12p0;
+	SPECULAR_LIGHT = n_out10p0;
+
+
+}
+"
+graph_offset = Vector2(-131.37, -96.9628)
+varyings/metallic_specular = "1,0"
+nodes/fragment/2/node = SubResource("VisualShaderNodeColorParameter_shkmf")
+nodes/fragment/2/position = Vector2(-40, -80)
+nodes/fragment/3/node = SubResource("VisualShaderNodeFloatParameter_0hmp3")
+nodes/fragment/3/position = Vector2(-40, 440)
+nodes/fragment/4/node = SubResource("VisualShaderNodeVectorCompose_ge00o")
+nodes/fragment/4/position = Vector2(220, -80)
+nodes/fragment/6/node = SubResource("VisualShaderNodeFloatParameter_du7ku")
+nodes/fragment/6/position = Vector2(-40, 200)
+nodes/fragment/7/node = SubResource("VisualShaderNodeFloatParameter_x3xka")
+nodes/fragment/7/position = Vector2(-40, 680)
+nodes/fragment/8/node = SubResource("VisualShaderNodeVaryingSetter_x3xka")
+nodes/fragment/8/position = Vector2(400, 860)
+nodes/fragment/connections = PackedInt32Array(2, 1, 4, 0, 2, 2, 4, 1, 2, 3, 4, 2, 4, 0, 0, 0, 3, 0, 0, 3, 6, 0, 0, 2, 7, 0, 0, 4, 7, 0, 8, 0)
+nodes/light/0/position = Vector2(480, 40)
+nodes/light/9/node = SubResource("VisualShaderNodeInput_shkmf")
+nodes/light/9/position = Vector2(100, 340)
+nodes/light/10/node = SubResource("VisualShaderNodeVectorOp_1t1ni")
+nodes/light/10/position = Vector2(320, 340)
+nodes/light/12/node = SubResource("VisualShaderNodeVectorOp_ge00o")
+nodes/light/12/position = Vector2(320, 40)
+nodes/light/13/node = SubResource("VisualShaderNodeInput_f6plj")
+nodes/light/13/position = Vector2(100, 40)
+nodes/light/19/node = SubResource("VisualShaderNodeCustom_aptr4")
+nodes/light/19/position = Vector2(100, 120)
+nodes/light/25/node = SubResource("VisualShaderNodeVaryingGetter_x3xka")
+nodes/light/25/position = Vector2(-80, 420)
+nodes/light/26/node = SubResource("VisualShaderNodeCustom_x3xka")
+nodes/light/26/position = Vector2(100, 420)
+nodes/light/connections = PackedInt32Array(9, 0, 10, 0, 13, 0, 12, 0, 10, 0, 0, 1, 26, 0, 10, 1, 25, 0, 26, 8, 19, 0, 12, 1, 12, 0, 0, 0)

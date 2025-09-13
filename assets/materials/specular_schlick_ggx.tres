@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://c73frb5366mpa"]
+
+[ext_resource type="Shader" uid="uid://bxfi37ikpx20j" path="res://assets/materials/shaders/SpecularSchlickGGX.tres" id="1_yx1h3"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_yx1h3")
+shader_parameter/AlbedoColor = Color(0, 1, 1, 1)
+shader_parameter/Metallic = 0.0
+shader_parameter/Roughness = 0.25
+shader_parameter/Specular = 0.5
