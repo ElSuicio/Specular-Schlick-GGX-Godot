@@ -15,7 +15,7 @@ func _get_category() -> String:
 	return "Lightning/Specular"
 
 func _get_description() -> String:
-	return "specular reflectance"
+	return "Schlick-GGX Specular Reflectance Model."
 
 func _get_return_icon_type() -> PortType:
 	return VisualShaderNode.PORT_TYPE_VECTOR_3D
