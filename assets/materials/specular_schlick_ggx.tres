@@ -1,6 +1,6 @@
 [gd_resource type="ShaderMaterial" load_steps=2 format=3 uid="uid://c73frb5366mpa"]
 
-[ext_resource type="Shader" uid="uid://bxfi37ikpx20j" path="res://assets/materials/shaders/SpecularSchlickGGX.tres" id="1_yx1h3"]
+[ext_resource type="Shader" uid="uid://bxfi37ikpx20j" path="res://addons/specular_schlick_ggx/materials/shaders/SpecularSchlickGGX.tres" id="1_yx1h3"]
 
 [resource]
 render_priority = 0

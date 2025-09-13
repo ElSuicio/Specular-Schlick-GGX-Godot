@@ -1,7 +1,7 @@
 [gd_resource type="VisualShader" load_steps=16 format=3 uid="uid://bxfi37ikpx20j"]
 
-[ext_resource type="Script" uid="uid://dgckc60lc0wao" path="res://addons/specular_schlick_ggx/SpecularSchlickGGX.gd" id="2_du7ku"]
-[ext_resource type="Script" uid="uid://bpu0lhxrryjmm" path="res://addons/diffuse_burley/DiffuseBurley.gd" id="2_x3xka"]
+[ext_resource type="Script" uid="uid://bml64owljskvw" path="res://addons/diffuse burley/DiffuseBurley.gd" id="2_0w2ey"]
+[ext_resource type="Script" uid="uid://cnipiiygy2sd" path="res://addons/specular_schlick_ggx/SpecularSchlickGGX.gd" id="2_du7ku"]
 
 [sub_resource type="VisualShaderNodeColorParameter" id="VisualShaderNodeColorParameter_shkmf"]
 expanded_output_ports = [0]
@@ -37,10 +37,6 @@ varying_name = "metallic_specular"
 [sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_f6plj"]
 input_name = "diffuse"
 
-[sub_resource type="VisualShaderNodeCustom" id="VisualShaderNodeCustom_aptr4"]
-initialized = true
-script = ExtResource("2_x3xka")
-
 [sub_resource type="VisualShaderNodeVaryingGetter" id="VisualShaderNodeVaryingGetter_x3xka"]
 varying_name = "metallic_specular"
 
@@ -48,6 +44,10 @@ varying_name = "metallic_specular"
 default_input_values = [0, null, 1, null, 2, null, 3, null, 4, null, 5, null, 6, null, 7, null, 8, 0.5]
 initialized = true
 script = ExtResource("2_du7ku")
+
+[sub_resource type="VisualShaderNodeCustom" id="VisualShaderNodeCustom_mkg4u"]
+initialized = true
+script = ExtResource("2_0w2ey")
 
 [sub_resource type="VisualShaderNodeInput" id="VisualShaderNodeInput_shkmf"]
 input_name = "specular"
@@ -109,8 +109,8 @@ void light() {
 	vec3 n_out13p0 = DIFFUSE_LIGHT;
 
 
-	vec3 n_out19p0;
-// Burley:19
+	vec3 n_out27p0;
+// Burley:27
 	{
 		
 			const float INV_PI = 0.318309;
@@ -135,13 +135,13 @@ void light() {
 			
 			float diffuse_burley = fd_V * fd_L * cNdotL;
 			
-			n_out19p0 = LIGHT_COLOR * ATTENUATION * diffuse_burley * INV_PI;
+			n_out27p0 = LIGHT_COLOR * ATTENUATION * diffuse_burley * INV_PI;
 			
 	}
 
 
 // VectorOp:12
-	vec3 n_out12p0 = n_out13p0 + n_out19p0;
+	vec3 n_out12p0 = n_out13p0 + n_out27p0;
 
 
 // Input:9
@@ -211,7 +211,7 @@ void light() {
 
 }
 "
-graph_offset = Vector2(-131.37, -96.9628)
+graph_offset = Vector2(-216.948, -76.4443)
 varyings/metallic_specular = "1,0"
 nodes/fragment/2/node = SubResource("VisualShaderNodeColorParameter_shkmf")
 nodes/fragment/2/position = Vector2(-40, -80)
@@ -235,10 +235,10 @@ nodes/light/12/node = SubResource("VisualShaderNodeVectorOp_ge00o")
 nodes/light/12/position = Vector2(320, 40)
 nodes/light/13/node = SubResource("VisualShaderNodeInput_f6plj")
 nodes/light/13/position = Vector2(100, 40)
-nodes/light/19/node = SubResource("VisualShaderNodeCustom_aptr4")
-nodes/light/19/position = Vector2(100, 120)
 nodes/light/25/node = SubResource("VisualShaderNodeVaryingGetter_x3xka")
 nodes/light/25/position = Vector2(-80, 420)
 nodes/light/26/node = SubResource("VisualShaderNodeCustom_x3xka")
 nodes/light/26/position = Vector2(100, 420)
-nodes/light/connections = PackedInt32Array(9, 0, 10, 0, 13, 0, 12, 0, 10, 0, 0, 1, 26, 0, 10, 1, 25, 0, 26, 8, 19, 0, 12, 1, 12, 0, 0, 0)
+nodes/light/27/node = SubResource("VisualShaderNodeCustom_mkg4u")
+nodes/light/27/position = Vector2(100, 120)
+nodes/light/connections = PackedInt32Array(9, 0, 10, 0, 13, 0, 12, 0, 10, 0, 0, 1, 26, 0, 10, 1, 25, 0, 26, 8, 12, 0, 0, 0, 27, 0, 12, 1)
