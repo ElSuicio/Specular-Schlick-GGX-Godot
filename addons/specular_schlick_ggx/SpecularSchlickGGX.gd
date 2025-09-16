@@ -135,12 +135,12 @@ func _get_code(input_vars : Array[String], output_vars : Array[String], _mode : 
 	float a = {roughness} * {roughness}; // Variance.
 	float a2 = a * a;
 	
-	/* Normal Distribution Function (GGX) */
+	/* Normal Distribution Function (Trowbridge-Reitz) */
 	float D = 1.0 + (a2 - 1.0) * cHdotN * cHdotN;
 	
 	D = a2 / (PI * D * D);
 	
-	/* Geometric Function (GGX) */
+	/* Geometric Function (Implicit) */
 	float G = 0.5 / mix(2.0 * cNdotL * cNdotV, cNdotL + cNdotV, a);
 	
 	/* Fresnel Function (Schlick’s Approximation) */
