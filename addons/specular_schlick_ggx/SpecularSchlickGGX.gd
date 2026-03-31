@@ -118,30 +118,23 @@ func _get_code(input_vars : Array[String], output_vars : Array[String], _mode : 
 	vec3 l = normalize( {light} );
 	vec3 v = normalize( {view} );
 	
+	float NdotL = min(max(dot(n, l), 1e-3), 1.0); // cos(theta_l) == cos(theta_i).
+	float NdotV = min(max(dot(n, v), 1e-3), 1.0); // cos(theta_v) == cos(theta_r).
+	
 	vec3 h = normalize(v + l); // Halfway Vector.
 	
-	float NdotL = dot(n, l); // [-1.0, 1.0].
-	float NdotV = dot(n, v); // [-1.0, 1.0].
+	float HdotN = dot(h, n); // cos(theta_h).
+	float HdotL = dot(h, l); // cos(theta_d).
 	
-	float HdotN = dot(h, n); // [-1.0, 1.0].
-	float HdotL = dot(h, l); // [-1.0, 1.0].
+	float alpha = {roughness} * {roughness}; // Variance.
+	float alpha2 = alpha * alpha;
 	
-	float cNdotL = max(NdotL, 0.0); // [0.0, 1.0].
-	float cNdotV = max(NdotV, 0.0); // [0.0, 1.0].
-	
-	float cHdotN = max(HdotN, 0.0); // [0.0, 1.0].
-	float cHdotL = max(HdotL, 0.0); // [0.0, 1.0].
-	
-	float a = {roughness} * {roughness}; // Variance.
-	float a2 = a * a;
-	
-	/* Normal Distribution Function (Trowbridge-Reitz) */
-	float D = 1.0 + (a2 - 1.0) * cHdotN * cHdotN;
-	
-	D = a2 / (PI * D * D);
+	/* Normal Distribution Function (Trowbridge-Reitz-GGX) */
+	float t = 1.0 + (alpha2 - 1.0) * HdotN * HdotN;
+	float D = alpha2 / (PI * t * t);
 	
 	/* Geometric Function (Implicit) */
-	float G = 0.5 / mix(2.0 * cNdotL * cNdotV, cNdotL + cNdotV, a);
+	float G = 0.5 / mix(2.0 * NdotL * NdotV, NdotL + NdotV, alpha);
 	
 	/* Fresnel Function (Schlick’s Approximation) */
 	float dielectric = 0.16 * {metallic_specular} * {metallic_specular};
@@ -151,7 +144,7 @@ func _get_code(input_vars : Array[String], output_vars : Array[String], _mode : 
 	
 	vec3 F = f0 + (f90 - f0) * pow(1.0 - HdotL, 5.0);
 	
-	vec3 specular_schlick_ggx = max(D * G * F * cNdotL, 0.0);
+	vec3 specular_schlick_ggx = D * G * F * NdotL;
 	
 	{output} = {light_color} * {attenuation} * specular_schlick_ggx;
 	"""

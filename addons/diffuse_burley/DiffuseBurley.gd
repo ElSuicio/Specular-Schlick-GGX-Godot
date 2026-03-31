@@ -94,29 +94,29 @@ func _get_code(input_vars : Array[String], output_vars : Array[String], _mode : 
 			input_vars[i] = default_vars[i]
 	
 	var shader : String = """
-	const float INV_PI = 0.318309;
+	const float INV_PI = 0.31830988618379067154;
 	
 	vec3 n = normalize( {normal} );
 	vec3 l = normalize( {light} );
 	vec3 v = normalize( {view} );
 	
-	vec3 h = normalize(v + l); // Halfway Vector.
+	float NdotL = min(max(dot(n, l), 1e-3), 1.0); // cos(theta_l) == cos(theta_i).
+	float NdotV = min(max(dot(n, v), 1e-3), 1.0); // cos(theta_v) == cos(theta_r).
 	
-	float cNdotL = max(dot(n, l), 0.0); // [0.0, 1.0].
-	float cNdotV = max(dot(n, v), 0.0); // [0.0, 1.0].
+	vec3 h = normalize(v + l);
 	
-	float cHdotL = max(dot(h, l), 0.0); // [0.0, 1.0].
+	float HdotL = dot(h, v); // cos(theta_d).
 	
 	// https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf
 	
-	float FD90 = 2.0 * {roughness} * cHdotL * cHdotL - 0.5;
+	float FD90 = 0.5 + 2.0 * {roughness} * HdotL * HdotL;
 	
-	float fd_L = 1.0 + (FD90) * pow(1.0 - cNdotL, 5.0);
-	float fd_V = 1.0 + (FD90) * pow(1.0 - cNdotV, 5.0);
+	float FD_l = pow(clamp(1.0 - NdotL, 0.0, 1.0), 5.0);
+	float FD_v = pow(clamp(1.0 - NdotV, 0.0, 1.0), 5.0);
 	
-	float diffuse_burley = fd_V * fd_L * cNdotL;
+	float diffuse_burley = INV_PI * mix(1.0, FD90, FD_l) * mix(1.0, FD90, FD_v) * NdotL;
 	
-	{output} = {light_color} * {attenuation} * diffuse_burley * INV_PI;
+	{output} = {light_color} * {attenuation} * diffuse_burley;
 	"""
 	
 	return shader.format({
