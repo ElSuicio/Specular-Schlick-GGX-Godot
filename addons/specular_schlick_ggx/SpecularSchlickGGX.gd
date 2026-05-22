@@ -118,35 +118,41 @@ func _get_code(input_vars : Array[String], output_vars : Array[String], _mode : 
 	vec3 l = normalize( {light} );
 	vec3 v = normalize( {view} );
 	
-	float NdotL = min(max(dot(n, l), 1e-3), 1.0); // cos(theta_l) == cos(theta_i).
-	float NdotV = min(max(dot(n, v), 1e-3), 1.0); // cos(theta_v) == cos(theta_r).
+	float NdotL = dot(n, l); // cos(theta_l) == cos(theta_i).
 	
-	vec3 h = normalize(v + l); // Halfway Vector.
-	
-	float HdotN = dot(h, n); // cos(theta_h).
-	float HdotL = dot(h, l); // cos(theta_d).
-	
-	float alpha = {roughness} * {roughness}; // Variance.
-	float alpha2 = alpha * alpha;
-	
-	/* Normal Distribution Function (Trowbridge-Reitz-GGX) */
-	float t = 1.0 + (alpha2 - 1.0) * HdotN * HdotN;
-	float D = alpha2 / (PI * t * t);
-	
-	/* Geometric Function (Implicit) */
-	float G = 0.5 / mix(2.0 * NdotL * NdotV, NdotL + NdotV, alpha);
-	
-	/* Fresnel Function (Schlick’s Approximation) */
-	float dielectric = 0.16 * {metallic_specular} * {metallic_specular};
-	
-	vec3 f0 = mix(vec3( dielectric ), {diffuse_color}, vec3( {metallic} )); 
-	float f90 = clamp(dot(f0, vec3(16.5)), {metallic}, 1.0);
-	
-	vec3 F = f0 + (f90 - f0) * pow(1.0 - HdotL, 5.0);
-	
-	vec3 specular_schlick_ggx = D * G * F * NdotL;
-	
-	{output} = {light_color} * {attenuation} * specular_schlick_ggx;
+	if (NdotL >= 0.0) {
+		float NdotV = min(max(dot(n, v), 1e-3), 1.0); // cos(theta_v) == cos(theta_r).
+		
+		vec3 h = normalize(v + l); // Halfway Vector.
+		
+		float HdotN = dot(h, n); // cos(theta_h).
+		float HdotL = dot(h, l); // cos(theta_d).
+		
+		float alpha = {roughness} * {roughness}; // Variance.
+		float alpha2 = alpha * alpha;
+		
+		/* Normal Distribution Function (Trowbridge-Reitz-GGX) */
+		float t = 1.0 + (alpha2 - 1.0) * HdotN * HdotN;
+		float D = alpha2 / (PI * t * t);
+		
+		/* Geometric Function (Implicit) */
+		float G = 0.5 / mix(2.0 * NdotL * NdotV, NdotL + NdotV, alpha);
+		
+		/* Fresnel Function (Schlick’s Approximation) */
+		float dielectric = 0.16 * {metallic_specular} * {metallic_specular};
+		
+		vec3 f0 = mix(vec3( dielectric ), {diffuse_color}, vec3( {metallic} )); 
+		float f90 = clamp(dot(f0, vec3(16.5)), {metallic}, 1.0);
+		
+		vec3 F = f0 + (f90 - f0) * pow(1.0 - HdotL, 5.0);
+		
+		vec3 specular_schlick_ggx = D * G * F * NdotL;
+		
+		{output} = {light_color} * {attenuation} * specular_schlick_ggx;
+	}
+	else {
+		{output} = vec3(0.0);
+	}
 	"""
 	
 	return shader.format({

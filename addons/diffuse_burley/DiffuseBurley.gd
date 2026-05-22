@@ -2,8 +2,8 @@
 extends VisualShaderNodeCustom
 class_name VisualShaderNodeDiffuseBurley
 
-# CC0 1.0 Universal, ElSuicio, 2025.
-# GODOT v4.4.1.stable.
+# CC0 1.0 Universal, ElSuicio, 2026.
+# GODOT v4.6.2.stable.
 # x.com/ElSuicio
 # github.com/ElSuicio
 # Contact email [interdreamsoft@gmail.com]
@@ -100,23 +100,28 @@ func _get_code(input_vars : Array[String], output_vars : Array[String], _mode : 
 	vec3 l = normalize( {light} );
 	vec3 v = normalize( {view} );
 	
-	float NdotL = min(max(dot(n, l), 1e-3), 1.0); // cos(theta_l) == cos(theta_i).
-	float NdotV = min(max(dot(n, v), 1e-3), 1.0); // cos(theta_v) == cos(theta_r).
+	float NdotL = dot(n, l); // cos(theta_l) == cos(theta_i).
 	
-	vec3 h = normalize(v + l);
-	
-	float HdotL = dot(h, v); // cos(theta_d).
-	
-	// https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf
-	
-	float FD90 = 0.5 + 2.0 * {roughness} * HdotL * HdotL;
-	
-	float FD_l = pow(clamp(1.0 - NdotL, 0.0, 1.0), 5.0);
-	float FD_v = pow(clamp(1.0 - NdotV, 0.0, 1.0), 5.0);
-	
-	float diffuse_burley = INV_PI * mix(1.0, FD90, FD_l) * mix(1.0, FD90, FD_v) * NdotL;
-	
-	{output} = {light_color} * {attenuation} * diffuse_burley;
+	if (NdotL >= 0.0) {
+		float NdotV = min(max(dot(n, v), 1e-3), 1.0); // cos(theta_v) == cos(theta_r).
+		
+		vec3 h = normalize(v + l);
+		
+		float HdotL = dot(h, l); // cos(theta_d).
+		
+		// https://media.disneyanimation.com/uploads/production/publication_asset/48/asset/s2012_pbs_disney_brdf_notes_v3.pdf
+		float FD90 = 0.5 + 2.0 * {roughness} * HdotL * HdotL;
+		
+		float FD_l = pow(clamp(1.0 - NdotL, 0.0, 1.0), 5.0);
+		float FD_v = pow(clamp(1.0 - NdotV, 0.0, 1.0), 5.0);
+		
+		float diffuse_burley = INV_PI * mix(1.0, FD90, FD_l) * mix(1.0, FD90, FD_v) * NdotL;
+		
+		{output} = {light_color} * {attenuation} * diffuse_burley;
+	}
+	else {
+		{output} = vec3(0.0);
+	}
 	"""
 	
 	return shader.format({
